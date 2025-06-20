@@ -59,7 +59,7 @@ export class MemStorage implements IStorage {
       {
         title: "Senior Developer",
         description: "Responsible for developing and maintaining software applications",
-        department: "Engineering",
+        department: "engineering",
         level: 3,
         minSalary: "75000",
         maxSalary: "95000",
@@ -68,7 +68,7 @@ export class MemStorage implements IStorage {
       {
         title: "Product Manager",
         description: "Oversees product development and strategy",
-        department: "Marketing",
+        department: "marketing",
         level: 4,
         minSalary: "85000",
         maxSalary: "110000",
@@ -77,7 +77,7 @@ export class MemStorage implements IStorage {
       {
         title: "UI Designer",
         description: "Creates user interface designs and prototypes",
-        department: "Engineering",
+        department: "engineering",
         level: 2,
         minSalary: "25",
         maxSalary: "45",
@@ -87,7 +87,58 @@ export class MemStorage implements IStorage {
 
     sampleRoles.forEach(role => {
       const id = this.currentRoleId++;
-      this.roles.set(id, { ...role, id });
+      this.roles.set(id, { ...role, id, responsibilities: [...role.responsibilities] });
+    });
+
+    // Sample employees
+    const sampleEmployees: InsertEmployee[] = [
+      {
+        firstName: "Sarah",
+        lastName: "Johnson",
+        email: "sarah.johnson@company.com",
+        phone: "+1-555-0123",
+        type: "full-time",
+        department: "engineering",
+        roleId: 1,
+        salary: "85000",
+        startDate: new Date("2023-01-15"),
+        status: "active"
+      },
+      {
+        firstName: "Mike",
+        lastName: "Chen",
+        email: "mike.chen@company.com",
+        phone: "+1-555-0124",
+        type: "full-time",
+        department: "marketing",
+        roleId: 2,
+        salary: "95000",
+        startDate: new Date("2022-08-20"),
+        status: "active"
+      },
+      {
+        firstName: "Alex",
+        lastName: "Rivera",
+        email: "alex.rivera@company.com",
+        phone: "+1-555-0125",
+        type: "part-time",
+        department: "engineering",
+        roleId: 3,
+        salary: "35",
+        startDate: new Date("2023-06-10"),
+        status: "active"
+      }
+    ];
+
+    sampleEmployees.forEach(employee => {
+      const id = this.currentEmployeeId++;
+      this.employees.set(id, {
+        ...employee,
+        id,
+        status: employee.status || "active",
+        phone: employee.phone || null,
+        createdAt: new Date()
+      });
     });
   }
 
@@ -102,7 +153,11 @@ export class MemStorage implements IStorage {
 
   async createRole(insertRole: InsertRole): Promise<Role> {
     const id = this.currentRoleId++;
-    const role: Role = { ...insertRole, id };
+    const role: Role = { 
+      ...insertRole, 
+      id,
+      responsibilities: [...insertRole.responsibilities]
+    };
     this.roles.set(id, role);
     return role;
   }
@@ -111,7 +166,11 @@ export class MemStorage implements IStorage {
     const existing = this.roles.get(id);
     if (!existing) return undefined;
 
-    const updated: Role = { ...existing, ...insertRole };
+    const updated: Role = { 
+      ...existing, 
+      ...insertRole,
+      responsibilities: insertRole.responsibilities ? [...insertRole.responsibilities] : existing.responsibilities
+    };
     this.roles.set(id, updated);
     return updated;
   }
@@ -154,6 +213,8 @@ export class MemStorage implements IStorage {
     const employee: Employee = { 
       ...insertEmployee, 
       id,
+      status: insertEmployee.status || "active",
+      phone: insertEmployee.phone || null,
       createdAt: new Date()
     };
     this.employees.set(id, employee);
@@ -207,6 +268,10 @@ export class MemStorage implements IStorage {
     const payslip: Payslip = { 
       ...insertPayslip, 
       id,
+      status: insertPayslip.status || "generated",
+      overtimeHours: insertPayslip.overtimeHours || "0",
+      overtimePay: insertPayslip.overtimePay || "0",
+      deductions: insertPayslip.deductions || "0",
       createdAt: new Date()
     };
     this.payslips.set(id, payslip);

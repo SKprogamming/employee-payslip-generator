@@ -95,7 +95,8 @@ The system uses three main entities:
 - **Push Command**: `npm run db:push` deploys schema changes
 
 ## Changelog
-- June 20, 2025. Initial setup
+- June 20, 2025: Initial setup with complete HRM system
+- June 20, 2025: Added Employee Portal with self-service capabilities for employees to enter personal data and track time
 
 ## User Preferences
 

@@ -9,6 +9,7 @@ import Employees from "@/pages/Employees";
 import Payslips from "@/pages/Payslips";
 import Roles from "@/pages/Roles";
 import Reports from "@/pages/Reports";
+import EmployeePortal from "@/pages/EmployeePortal";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
         <Route path="/payslips" component={Payslips} />
         <Route path="/roles" component={Roles} />
         <Route path="/reports" component={Reports} />
+        <Route path="/portal" component={EmployeePortal} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

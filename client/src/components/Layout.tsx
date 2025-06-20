@@ -16,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: "Payslips", href: "/payslips", icon: FileText, current: location === "/payslips" },
     { name: "Roles", href: "/roles", icon: UserCheck, current: location === "/roles" },
     { name: "Reports", href: "/reports", icon: PieChart, current: location === "/reports" },
+    { name: "My Portal", href: "/portal", icon: Users, current: location === "/portal" },
   ];
 
   return (
@@ -44,7 +45,8 @@ export default function Layout({ children }: LayoutProps) {
                     "flex items-center px-4 py-3 rounded-lg font-medium transition-colors",
                     item.current
                       ? "text-primary bg-blue-50"
-                      : "text-gray-600 hover:bg-gray-50"
+                      : "text-gray-600 hover:bg-gray-50",
+                    item.name === "My Portal" && "border-t border-gray-200 mt-2 pt-4"
                   )}
                 >
                   <Icon className="h-5 w-5 mr-3" />
@@ -62,7 +64,9 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Admin User</p>
-              <p className="text-xs text-gray-500">System Administrator</p>
+              <p className="text-xs text-gray-500">
+                {location === "/portal" ? "Employee Portal" : "System Administrator"}
+              </p>
             </div>
           </div>
         </div>
