@@ -18,9 +18,9 @@ export default function Employees() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeWithRole | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-  const [selectedType, setSelectedType] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const { toast } = useToast();
 
   const { data: employees = [], isLoading } = useQuery<EmployeeWithRole[]>({
@@ -50,9 +50,9 @@ export default function Employees() {
       employee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesDepartment = !selectedDepartment || employee.department === selectedDepartment;
-    const matchesType = !selectedType || employee.type === selectedType;
-    const matchesStatus = !selectedStatus || employee.status === selectedStatus;
+    const matchesDepartment = !selectedDepartment || selectedDepartment === "all" || employee.department === selectedDepartment;
+    const matchesType = !selectedType || selectedType === "all" || employee.type === selectedType;
+    const matchesStatus = !selectedStatus || selectedStatus === "all" || employee.status === selectedStatus;
 
     return matchesSearch && matchesDepartment && matchesType && matchesStatus;
   });
@@ -124,7 +124,7 @@ export default function Employees() {
                   <SelectValue placeholder="All Departments" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Departments</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   <SelectItem value="engineering">Engineering</SelectItem>
                   <SelectItem value="marketing">Marketing</SelectItem>
                   <SelectItem value="sales">Sales</SelectItem>
@@ -140,7 +140,7 @@ export default function Employees() {
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="full-time">Full-Time</SelectItem>
                   <SelectItem value="part-time">Part-Time</SelectItem>
                 </SelectContent>
@@ -154,7 +154,7 @@ export default function Employees() {
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Status</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>

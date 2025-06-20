@@ -107,7 +107,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
         email: "",
         phone: "",
         type: "full-time",
-        department: "",
+        department: "engineering",
         roleId: 0,
         salary: "",
         startDate: "",
