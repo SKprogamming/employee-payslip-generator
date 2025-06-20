@@ -97,6 +97,7 @@ The system uses three main entities:
 ## Changelog
 - June 20, 2025: Initial setup with complete HRM system
 - June 20, 2025: Added Employee Portal with self-service capabilities for employees to enter personal data and track time
+- June 20, 2025: Migrated from in-memory storage to PostgreSQL database with Drizzle ORM
 
 ## User Preferences
 

@@ -1,4 +1,6 @@
 import { roles, employees, payslips, type Role, type Employee, type Payslip, type InsertRole, type InsertEmployee, type InsertPayslip, type EmployeeWithRole, type PayslipWithEmployee } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Role methods
@@ -33,6 +35,7 @@ export interface IStorage {
   }>;
 }
 
+// Legacy in-memory storage implementation (kept for reference)
 export class MemStorage implements IStorage {
   private roles: Map<number, Role>;
   private employees: Map<number, Employee>;
@@ -90,56 +93,9 @@ export class MemStorage implements IStorage {
       this.roles.set(id, { ...role, id, responsibilities: [...role.responsibilities] });
     });
 
-    // Sample employees
-    const sampleEmployees: InsertEmployee[] = [
-      {
-        firstName: "Sarah",
-        lastName: "Johnson",
-        email: "sarah.johnson@company.com",
-        phone: "+1-555-0123",
-        type: "full-time",
-        department: "engineering",
-        roleId: 1,
-        salary: "85000",
-        startDate: new Date("2023-01-15"),
-        status: "active"
-      },
-      {
-        firstName: "Mike",
-        lastName: "Chen",
-        email: "mike.chen@company.com",
-        phone: "+1-555-0124",
-        type: "full-time",
-        department: "marketing",
-        roleId: 2,
-        salary: "95000",
-        startDate: new Date("2022-08-20"),
-        status: "active"
-      },
-      {
-        firstName: "Alex",
-        lastName: "Rivera",
-        email: "alex.rivera@company.com",
-        phone: "+1-555-0125",
-        type: "part-time",
-        department: "engineering",
-        roleId: 3,
-        salary: "35",
-        startDate: new Date("2023-06-10"),
-        status: "active"
-      }
-    ];
+    // Sample employees are now seeded via database seed script
 
-    sampleEmployees.forEach(employee => {
-      const id = this.currentEmployeeId++;
-      this.employees.set(id, {
-        ...employee,
-        id,
-        status: employee.status || "active",
-        phone: employee.phone || null,
-        createdAt: new Date()
-      });
-    });
+    // Note: Sample employees are now seeded via database seed script
   }
 
   // Role methods
@@ -322,4 +278,175 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  async getRoles(): Promise<Role[]> {
+    return await db.select().from(roles);
+  }
+
+  async getRole(id: number): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
+    return role || undefined;
+  }
+
+  async createRole(insertRole: InsertRole): Promise<Role> {
+    const [role] = await db
+      .insert(roles)
+      .values(insertRole)
+      .returning();
+    return role;
+  }
+
+  async updateRole(id: number, insertRole: Partial<InsertRole>): Promise<Role | undefined> {
+    const [role] = await db
+      .update(roles)
+      .set(insertRole)
+      .where(eq(roles.id, id))
+      .returning();
+    return role || undefined;
+  }
+
+  async deleteRole(id: number): Promise<boolean> {
+    const result = await db.delete(roles).where(eq(roles.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getEmployees(): Promise<EmployeeWithRole[]> {
+    const employeeList = await db
+      .select()
+      .from(employees)
+      .leftJoin(roles, eq(employees.roleId, roles.id));
+    
+    return employeeList.map(row => ({
+      ...row.employees,
+      role: row.roles!
+    }));
+  }
+
+  async getEmployee(id: number): Promise<EmployeeWithRole | undefined> {
+    const [result] = await db
+      .select()
+      .from(employees)
+      .leftJoin(roles, eq(employees.roleId, roles.id))
+      .where(eq(employees.id, id));
+    
+    if (!result || !result.roles) return undefined;
+    
+    return {
+      ...result.employees,
+      role: result.roles
+    };
+  }
+
+  async getEmployeeByEmail(email: string): Promise<Employee | undefined> {
+    const [employee] = await db.select().from(employees).where(eq(employees.email, email));
+    return employee || undefined;
+  }
+
+  async createEmployee(insertEmployee: InsertEmployee): Promise<Employee> {
+    const [employee] = await db
+      .insert(employees)
+      .values(insertEmployee)
+      .returning();
+    return employee;
+  }
+
+  async updateEmployee(id: number, insertEmployee: Partial<InsertEmployee>): Promise<Employee | undefined> {
+    const [employee] = await db
+      .update(employees)
+      .set(insertEmployee)
+      .where(eq(employees.id, id))
+      .returning();
+    return employee || undefined;
+  }
+
+  async deleteEmployee(id: number): Promise<boolean> {
+    const result = await db.delete(employees).where(eq(employees.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getPayslips(): Promise<PayslipWithEmployee[]> {
+    const payslipList = await db
+      .select()
+      .from(payslips)
+      .leftJoin(employees, eq(payslips.employeeId, employees.id))
+      .orderBy(payslips.createdAt);
+    
+    return payslipList.map(row => ({
+      ...row.payslips,
+      employee: row.employees!
+    }));
+  }
+
+  async getPayslip(id: number): Promise<PayslipWithEmployee | undefined> {
+    const [result] = await db
+      .select()
+      .from(payslips)
+      .leftJoin(employees, eq(payslips.employeeId, employees.id))
+      .where(eq(payslips.id, id));
+    
+    if (!result || !result.employees) return undefined;
+    
+    return {
+      ...result.payslips,
+      employee: result.employees
+    };
+  }
+
+  async getPayslipsByEmployee(employeeId: number): Promise<Payslip[]> {
+    return await db.select().from(payslips).where(eq(payslips.employeeId, employeeId));
+  }
+
+  async createPayslip(insertPayslip: InsertPayslip): Promise<Payslip> {
+    const [payslip] = await db
+      .insert(payslips)
+      .values(insertPayslip)
+      .returning();
+    return payslip;
+  }
+
+  async updatePayslip(id: number, insertPayslip: Partial<InsertPayslip>): Promise<Payslip | undefined> {
+    const [payslip] = await db
+      .update(payslips)
+      .set(insertPayslip)
+      .where(eq(payslips.id, id))
+      .returning();
+    return payslip || undefined;
+  }
+
+  async deletePayslip(id: number): Promise<boolean> {
+    const result = await db.delete(payslips).where(eq(payslips.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getStats(): Promise<{
+    totalEmployees: number;
+    fullTimeEmployees: number;
+    partTimeEmployees: number;
+    monthlyPayroll: number;
+  }> {
+    const employeeList = await db.select().from(employees).where(eq(employees.status, 'active'));
+    const fullTimeEmployees = employeeList.filter(emp => emp.type === 'full-time');
+    const partTimeEmployees = employeeList.filter(emp => emp.type === 'part-time');
+
+    // Calculate monthly payroll estimate
+    let monthlyPayroll = 0;
+    for (const employee of employeeList) {
+      const salary = parseFloat(employee.salary);
+      if (employee.type === 'full-time') {
+        monthlyPayroll += salary / 12; // Annual to monthly
+      } else {
+        monthlyPayroll += salary * 80; // Assuming 80 hours per month for part-time
+      }
+    }
+
+    return {
+      totalEmployees: employeeList.length,
+      fullTimeEmployees: fullTimeEmployees.length,
+      partTimeEmployees: partTimeEmployees.length,
+      monthlyPayroll: Math.round(monthlyPayroll)
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
